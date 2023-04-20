@@ -23,10 +23,16 @@ export default class LwcFinalAssement extends NavigationMixin(LightningElement) 
         getObjfields({sObjName:this.objectName}).then(result=>{
             // console.log(result)
              const tempField=result;
-             for(let key in tempField){
-                 this.fieldsOptions=[...this.fieldsOptions,{label:key,value:tempField[key]}];
-                // console.log(this.fieldsOptions)
-             }
+             for (let key in tempField) {
+                if (Object.prototype.hasOwnProperty.call(tempField, key)) {
+                  this.fieldsOptions = [...this.fieldsOptions,{ label: key, value: tempField[key]}];
+                  console.log(this.fieldsOptions)
+                }
+              }
+            //  for(let key in tempField){
+            //      this.fieldsOptions=[...this.fieldsOptions,{label:key,value:tempField[key]}];
+            //     // console.log(this.fieldsOptions)
+            //  }
          }).catch(error=>{
              console.error(error);
          });
