@@ -1,9 +1,7 @@
-iimport { LightningElement,api,wire } from 'lwc';
-import getObjNames from '@salesforce/apex/ApexClass.getObjNames';
+import { LightningElement,api} from 'lwc';
 import getObjfields from '@salesforce/apex/ApexClass.getObjfields';
 import getQueryResult from '@salesforce/apex/ApexClass.getQueryResult';
 import { NavigationMixin } from 'lightning/navigation';
-
 
 export default class LwcFinalAssement extends NavigationMixin(LightningElement) {
     finalQuery;
@@ -11,55 +9,28 @@ export default class LwcFinalAssement extends NavigationMixin(LightningElement) 
     fieldsOptions=[];
     showQuery=false;
     sdhoDatatable = false;
-
-
-    objNameOptions=[];
-    selectedObject;
-    @api recordId;
-    // @api objectName;
-    condData='WHERE AccountId='+this.recordId;
     displayQueryData;
+    @api recordId;
+    @api objectName;
+    defaultSortDirection = 'asc';
+    sortDirection = 'asc';
+    sortedBy;
 
-    @wire(getObjNames)
-    objHandler({data,error}){
-        if(data){
-            const tempData=data;
-
-            for(let key in tempData){
-                this.objNameOptions=[...this.objNameOptions,{label:key,value:tempData[key]}];
-            }
-            console.log(this.recordId);
-            this.objNameOptions=this.objNameOptions.sort((a,b)=>(a.label > b.label)? 1 :((b.label > a.label) ? -1 : 0));
-
-        }
-        // if(error){
-        //     console.error(error);
-        // }
-    }
     datatableHandler(){
         this.sdhoDatatable =! this.sdhoDatatable;
     }
-
-    objchangeHandler(event)
-    {
-        this.selectedObject=event.target.value;
-       // alert(event.target.value)
-
-        getObjfields({sObjName:this.selectedObject}).then(result=>{
-           // console.log(result)
-            const tempField=result;
-
-            for(let key in tempField){
-                this.fieldsOptions=[...this.fieldsOptions,{label:key,value:tempField[key]}];
-               // console.log(this.fieldsOptions)
-            }
-        }).catch(error=>{
-            console.error(error);
-        });
-
-
+    connectedCallback(){
+        getObjfields({sObjName:this.objectName}).then(result=>{
+            // console.log(result)
+             const tempField=result;
+             for(let key in tempField){
+                 this.fieldsOptions=[...this.fieldsOptions,{label:key,value:tempField[key]}];
+                // console.log(this.fieldsOptions)
+             }
+         }).catch(error=>{
+             console.error(error);
+         });
     }
-
     columns=[];
     columns1=[];
     changeHandler(event)
@@ -67,41 +38,32 @@ export default class LwcFinalAssement extends NavigationMixin(LightningElement) 
         this.columns=[];
         this.selectedPickValues=event.target.value;
 
-        
-       this.finalQuery=`Select ${this.selectedPickValues} from ${this.selectedObject} WHERE AccountId='${this.recordId}'`;
-       this.showQuery=true;
-
+       this.finalQuery=`Select ${this.selectedPickValues} from ${this.objectName} WHERE AccountId='${this.recordId}'`;
+       
        let arrs=JSON.parse(JSON.stringify(this.selectedPickValues));
         console.log(arrs);
    
-
     this.columns1=arrs;
     this.columns1.forEach(ele=>{
-               this.columns=[...this.columns,{label:ele,fieldName:ele}];
+               this.columns=[...this.columns,{label:ele,fieldName:ele,sortable: true}];
     });
-
        console.log(this.columns);
-     
-
+       this.columns.push({
+        type: 'action',
+        typeAttributes: {
+            rowActions: [
+                { label: 'Edit', name: 'edit' },
+                { label: 'New', name: 'new' },
+            ],
+        },
+    });
     }
 
-    // conditionHandler(event){
-    //     this.condData=event.target.value;
-    //     this.finalQuery=`Select ${this.selectedPickValues} from ${this.selectedObject} ${this.condData}`;
-
-       
-    // }
-
-    
     clickHandler(){
+        this.sdhoDatatable =! this.sdhoDatatable;
         console.log(this.finalQuery);
-        // this.columns = [ 
-        //      { label: 'Id', fieldName: 'Id' }, 
-        //        { label: 'Name', fieldName: 'Name'} 
-        //      ]; 
-        // this.finalQuery=`Select ${this.selectedPickValues} from ${this.selectedObject} ${this.condData}`;
+
         getQueryResult({querySring:this.finalQuery}).then(result=>{
-          //  console.log(result);
             this.displayQueryData=result;
             this.displayQueryData.forEach(element => {
                 console.log(element);
@@ -110,44 +72,64 @@ export default class LwcFinalAssement extends NavigationMixin(LightningElement) 
         }).catch(error=>{
             console.error(error);
         });
-
-      
     } 
+    handleRowAction(event) {
+        const actionName = event.detail.action.name;
+        const row = event.detail.row;
+
+        switch (actionName) {
+            case 'edit':
+                this[NavigationMixin.Navigate]({
+                    type: 'standard__recordPage',
+                    attributes: {
+                        recordId: row.Id,
+                        objectApiName: this.objectName,
+                        actionName: 'edit'
+                    }
+                });
+                break;
+            case 'new':
+                this[NavigationMixin.Navigate]({            
+                    type: 'standard__objectPage',
+                    attributes: {
+                        objectApiName: this.objectName,
+                        actionName: 'new'               
+                    }
+                });
+                break;
+            default:
+                break;
+        }
+    }
     createNew(){
         this[NavigationMixin.Navigate]({            
             type: 'standard__objectPage',
             attributes: {
-                objectApiName: this.selectedObject,
+                objectApiName: this.objectName,
                 actionName: 'new'               
             }
         });  
     }
-    // handleRowAction( event ) {
+    handleSort(event) {
+        const { fieldName: sortedBy, sortDirection } = event.detail;
+        const cloneData = [...this.displayQueryData];
 
-    //     const actionName = event.detail.action.name;
-    //     const row = event.detail.row;
-    //     switch ( actionName ) {
-    //         case 'New':
-    //             this[NavigationMixin.Navigate]({            
-    //                 type: 'standard__objectPage',
-    //                 attributes: {
-    //                     objectApiName: this.selectedObject,
-    //                     actionName: 'new'               
-    //                 }
-    //             });
-    //             break;
-    //         case 'edit':
-    //             this[NavigationMixin.Navigate]({
-    //                 type: 'standard__recordPage',
-    //                 attributes: {
-    //                     recordId: row.Id,
-    //                     objectApiName: this.selectedObject,
-    //                     actionName: 'edit'
-    //                 }
-    //             });
-    //             break;
-    //         default:
-    //     }
+        cloneData.sort(this.sortData(sortedBy, sortDirection));
 
-    //}
+        this.displayQueryData = cloneData;
+        this.sortDirection = sortDirection;
+        this.sortedBy = sortedBy;
+    }
+
+    sortData(fieldName, sortDirection) {
+        const sortOrder = sortDirection === 'asc' ? 1 : -1;
+        return (a, b) => {
+            if (a[fieldName] < b[fieldName]) {
+                return -1 * sortOrder;
+            } else if (a[fieldName] > b[fieldName]) {
+                return 1 * sortOrder;
+            }
+            return 0;
+        };
+    }
 }

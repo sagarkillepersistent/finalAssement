@@ -1,26 +1,24 @@
 <template>
     <lightning-card title="Lwc Resuable Component">
         <lightning-button label="Modify Datatable" variant="brand" onclick={datatableHandler} slot="actions" class="slds-p-around--medium" ></lightning-button>
-        <lightning-button label="New Record" variant="brand" onclick={createNew} slot="actions" class="slds-p-around--medium" ></lightning-button>
+        <lightning-button label="New Record" variant="brand" onclick={createNew} slot="actions" class="slds-var-p-around_medium" ></lightning-button>
         <template if:true={sdhoDatatable}>
-            <div class="slds-m-around_large">
-                <lightning-combobox name="ObjectNames" label="ObjectNames" options={objNameOptions} value={selectedObject}
-                    onchange={objchangeHandler}>
-                </lightning-combobox>
-            </div>
-            <div class="slds-m-around_large slds-var-p-right_large">
+            <div class="slds-var-m-around_large slds-var-p-right_large">
                 <lightning-dual-listbox label="Fields" source-label="Select fields" selected-label="Available Field"
                     options={fieldsOptions} onchange={changeHandler} value={selectedPickValues}>
                 </lightning-dual-listbox>
             </div>
-            <template if:true={showQuery}>
-                <lightning-button class="slds-m-around_large" label="Get Records" variant="brand"
+                <lightning-button class="slds-var-m-around_large" label="Get Records" variant="brand"
                     onclick={clickHandler}></lightning-button>
-            </template>
         </template>
     </lightning-card>
     <lightning-card title="Datatable">
-        <lightning-datatable key-field="Id" data={displayQueryData} columns={columns} onrowaction={handleRowAction}>
+        <lightning-datatable key-field="Id" 
+                             data={displayQueryData} 
+                             columns={columns} 
+                             hide-checkbox-column
+                             onsort={handleSort}
+                             onrowaction={handleRowAction}>
         </lightning-datatable>
     </lightning-card>
 </template>

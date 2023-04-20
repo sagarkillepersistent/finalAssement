@@ -6,10 +6,10 @@
         <target>lightning__RecordPage</target>
         <!-- <target>lightningCommunity__Default</target> -->
     </targets>
-    <!-- <targetConfigs>
+    <targetConfigs>
         <targetConfig targets="lightning__RecordPage">
-            <property name="objectName" type="String"/> 
+            <property name="objectName" type="String" datasource="Contact,Opportunity,Case"/> 
             
         </targetConfig>
-    </targetConfigs> -->
+    </targetConfigs>
 </LightningComponentBundle>
