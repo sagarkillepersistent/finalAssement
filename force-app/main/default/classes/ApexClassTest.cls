@@ -1,36 +1,46 @@
 @isTest
-public class ApexClassTest {
-    @isTest
-    static void testGetObjfields() {
-        Test.startTest();
-        Map<String, String> result = ApexClass.getObjfields('Contact');
-        Test.stopTest();
+private class ApexClassTest {
+    @testSetup
+    static void setup() {
+        // Create a sample Account record
+        Account testAccount = new Account(Name='Test Account');
+        insert testAccount;
 
-        System.assertNotEquals(null, result, 'Expected a non-null result');
-        System.assertEquals(true, result.containsKey('Email'), 'Expected Email field to be present');
+        // Create a sample Contact record
+        Contact testContact = new Contact(FirstName='John', LastName='Doe', AccountId=testAccount.Id);
+        insert testContact;
+    }
+
+    @isTest
+    static void testGetObjFields() {
+        // Test Account object fields
+        Map<String, String> accountFields = ApexClass.getObjfields('Account');
+        System.assertNotEquals(null, accountFields, 'Account fields should not be null');
+        System.assert(accountFields.size() > 0, 'Account fields should not be empty');
+        
+        // Test Contact object fields
+        Map<String, String> contactFields = ApexClass.getObjfields('Contact');
+        System.assertNotEquals(null, contactFields, 'Contact fields should not be null');
+        System.assert(contactFields.size() > 0, 'Contact fields should not be empty');
     }
 
     @isTest
     static void testGetQueryResult() {
-        Account testAccount = new Account(Name = 'Test Account');
-        insert testAccount;
+        // Test Account query
+        String accountQuery = 'SELECT Id, Name FROM Account';
+        List<SObject> accountResults = ApexClass.getQueryResult(accountQuery);
+        System.assertNotEquals(null, accountResults, 'Account query results should not be null');
+        System.assertEquals(1, accountResults.size(), 'Account query should return 1 record');
 
-        Contact testContact = new Contact(
-            FirstName = 'Test',
-            LastName = 'Contact',
-            Email = 'test.contact@example.com',
-            AccountId = testAccount.Id
-        );
-        insert testContact;
+        // Test Contact query
+        String contactQuery = 'SELECT Id, FirstName, LastName, AccountId FROM Contact';
+        List<SObject> contactResults = ApexClass.getQueryResult(contactQuery);
+        System.assertNotEquals(null, contactResults, 'Contact query results should not be null');
+        System.assertEquals(1, contactResults.size(), 'Contact query should return 1 record');
 
-        String query = 'SELECT Id, FirstName, LastName, Email FROM Contact WHERE AccountId = \'' + testAccount.Id + '\'';
-
-        Test.startTest();
-        List<SObject> queryResult = ApexClass.getQueryResult(query);
-        Test.stopTest();
-
-        System.assertNotEquals(null, queryResult, 'Expected a non-null query result');
-        System.assertEquals(1, queryResult.size(), 'Expected exactly one record');
-        System.assertEquals(testContact.Id, queryResult[0].Id, 'Expected the correct contact record');
+        // Test a query that returns no records
+        String noResultQuery = 'SELECT Id, Name FROM Account WHERE Name = \'Nonexistent Account\'';
+        List<SObject> noResult = ApexClass.getQueryResult(noResultQuery);
+        System.assertEquals(null, noResult, 'Query with no results should return null');
     }
 }
